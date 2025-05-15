@@ -22,7 +22,7 @@
         <img alt="Static Badge" src="https://img.shields.io/badge/Online-Demo-4e6b99">
     </a>
     <a href="https://hub.docker.com/r/infiniflow/ragflow" target="_blank">
-        <img src="https://img.shields.io/badge/docker_pull-ragflow:v0.16.0-brightgreen" alt="docker pull infiniflow/ragflow:v0.16.0">
+        <img src="https://img.shields.io/badge/docker_pull-ragflow:v0.18.0-brightgreen" alt="docker pull infiniflow/ragflow:v0.18.0">
     </a>
     <a href="https://github.com/infiniflow/ragflow/releases/latest">
         <img src="https://img.shields.io/github/v/release/infiniflow/ragflow?color=blue&label=Latest%20Release" alt="Latest Release">
@@ -36,7 +36,7 @@
   <a href="https://ragflow.io/docs/dev/">Document</a> |
   <a href="https://github.com/infiniflow/ragflow/issues/4214">Roadmap</a> |
   <a href="https://twitter.com/infiniflowai">Twitter</a> |
-  <a href="https://discord.gg/4XxujFgUN7">Discord</a> |
+  <a href="https://discord.gg/NjYzJD3GM3">Discord</a> |
   <a href="https://demo.ragflow.io">Demo</a>
 </h4>
 
@@ -55,11 +55,10 @@
 
 ## 🔥 最新情報
 
-- 2025-02-05 シリコン フローの St およびモデル リストを更新し、Deep Seek-R1/Deep Seek-V3 のサポートを追加しました。
+- 2025-03-19 PDFまたはDOCXファイル内の画像を理解するために、多モーダルモデルを使用することをサポートします。
+- 2025-02-28 インターネット検索 (TAVILY) と組み合わせて、あらゆる LLM の詳細な調査をサポートします。
 - 2025-01-26 ナレッジ グラフの抽出と適用を最適化し、さまざまな構成オプションを提供します。
-- 2024-12-18 Deepdoc のドキュメント レイアウト分析モデルをアップグレードします。
-- 2024-12-04 ナレッジ ベースへのページランク スコアをサポートしました。
-- 2024-11-22 エージェントでの変数の定義と使用法を改善しました。
+- 2024-12-18 DeepDoc のドキュメント レイアウト分析モデルをアップグレードします。
 - 2024-11-01 再現の精度を向上させるために、解析されたチャンクにキーワード抽出と関連質問の生成を追加しました。
 - 2024-08-22 RAG を介して SQL ステートメントへのテキストをサポートします。
 
@@ -146,21 +145,29 @@
 
 3. ビルド済みの Docker イメージをビルドし、サーバーを起動する:
 
-   > 以下のコマンドは、RAGFlow Docker イメージの v0.16.0-slim エディションをダウンロードします。異なる RAGFlow エディションの説明については、以下の表を参照してください。v0.16.0-slim とは異なるエディションをダウンロードするには、docker/.env ファイルの RAGFLOW_IMAGE 変数を適宜更新し、docker compose を使用してサーバーを起動してください。例えば、完全版 v0.16.0 をダウンロードするには、RAGFLOW_IMAGE=infiniflow/ragflow:v0.16.0 と設定します。
+> [!CAUTION]
+> 現在、公式に提供されているすべての Docker イメージは x86 アーキテクチャ向けにビルドされており、ARM64 用の Docker イメージは提供されていません。
+> ARM64 アーキテクチャのオペレーティングシステムを使用している場合は、[このドキュメント](https://ragflow.io/docs/dev/build_docker_image)を参照して Docker イメージを自分でビルドしてください。
+
+   > 以下のコマンドは、RAGFlow Docker イメージの v0.18.0-slim エディションをダウンロードします。異なる RAGFlow エディションの説明については、以下の表を参照してください。v0.18.0-slim とは異なるエディションをダウンロードするには、docker/.env ファイルの RAGFLOW_IMAGE 変数を適宜更新し、docker compose を使用してサーバーを起動してください。例えば、完全版 v0.18.0 をダウンロードするには、RAGFLOW_IMAGE=infiniflow/ragflow:v0.18.0 と設定します。
 
    ```bash
-   $ cd ragflow
-   $ docker compose -f docker/docker-compose.yml up -d
+   $ cd ragflow/docker
+   # Use CPU for embedding and DeepDoc tasks:
+   $ docker compose -f docker-compose.yml up -d
+
+   # To use GPU to accelerate embedding and DeepDoc tasks:
+   # docker compose -f docker-compose-gpu.yml up -d
    ```
 
    | RAGFlow image tag | Image size (GB) | Has embedding models? | Stable?                  |
    | ----------------- | --------------- | --------------------- | ------------------------ |
-   | v0.16.0           | &approx;9       | :heavy_check_mark:    | Stable release           |
-   | v0.16.0-slim      | &approx;2       | ❌                    | Stable release           |
+   | v0.18.0           | &approx;9       | :heavy_check_mark:    | Stable release           |
+   | v0.18.0-slim      | &approx;2       | ❌                    | Stable release           |
    | nightly           | &approx;9       | :heavy_check_mark:    | _Unstable_ nightly build |
-   | nightly-slim      | &approx;2       | ❌                    | _Unstable_ nightly build |
+   | nightly-slim      | &approx;2       | ❌                     | _Unstable_ nightly build |
 
-4. サーバーを立ち上げた後、サーバーの状態を確認する:
+1. サーバーを立ち上げた後、サーバーの状態を確認する:
 
    ```bash
    $ docker logs -f ragflow-server
@@ -176,16 +183,13 @@
     /_/ |_|/_/  |_|\____//_/    /_/ \____/ |__/|__/
 
     * Running on all addresses (0.0.0.0)
-    * Running on http://127.0.0.1:9380
-    * Running on http://x.x.x.x:9380
-    INFO:werkzeug:Press CTRL+C to quit
    ```
 
    > もし確認ステップをスキップして直接 RAGFlow にログインした場合、その時点で RAGFlow が完全に初期化されていない可能性があるため、ブラウザーがネットワーク異常エラーを表示するかもしれません。
 
-5. ウェブブラウザで、プロンプトに従ってサーバーの IP アドレスを入力し、RAGFlow にログインします。
+2. ウェブブラウザで、プロンプトに従ってサーバーの IP アドレスを入力し、RAGFlow にログインします。
    > デフォルトの設定を使用する場合、デフォルトの HTTP サービングポート `80` は省略できるので、与えられたシナリオでは、`http://IP_OF_YOUR_MACHINE`（ポート番号は省略）だけを入力すればよい。
-6. [service_conf.yaml.template](./docker/service_conf.yaml.template) で、`user_default_llm` で希望の LLM ファクトリを選択し、`API_KEY` フィールドを対応する API キーで更新する。
+3. [service_conf.yaml.template](./docker/service_conf.yaml.template) で、`user_default_llm` で希望の LLM ファクトリを選択し、`API_KEY` フィールドを対応する API キーで更新する。
 
    > 詳しくは [llm_api_key_setup](https://ragflow.io/docs/dev/llm_api_key_setup) を参照してください。
 
@@ -208,7 +212,7 @@
 > すべてのシステム設定のアップデートを有効にするには、システムの再起動が必要です:
 >
 > ```bash
-> $ docker compose -f docker/docker-compose.yml up -d
+> $ docker compose -f docker-compose.yml up -d
 > ```
 
 ### Elasticsearch から Infinity にドキュメントエンジンを切り替えます
@@ -219,13 +223,14 @@ RAGFlow はデフォルトで Elasticsearch を使用して全文とベクトル
    ```bash
    $ docker compose -f docker/docker-compose.yml down -v
    ```
+   Note: `-v` は docker コンテナのボリュームを削除し、既存のデータをクリアします。
 2. **docker/.env** の「DOC \_ ENGINE」を「infinity」に設定します。
 
 3. 起動コンテナ：
    ```bash
-   $ docker compose -f docker/docker-compose.yml up -d
+   $ docker compose -f docker-compose.yml up -d
    ```
-   > [!WARNING]  
+   > [!WARNING]
    > Linux/arm64 マシンでの Infinity への切り替えは正式にサポートされていません。
 
 ## 🔧 ソースコードで Docker イメージを作成（埋め込みモデルなし）
@@ -235,7 +240,7 @@ RAGFlow はデフォルトで Elasticsearch を使用して全文とベクトル
 ```bash
 git clone https://github.com/infiniflow/ragflow.git
 cd ragflow/
-docker build --build-arg LIGHTEN=1 -f Dockerfile -t infiniflow/ragflow:nightly-slim .
+docker build --platform linux/amd64 --build-arg LIGHTEN=1 -f Dockerfile -t infiniflow/ragflow:nightly-slim .
 ```
 
 ## 🔧 ソースコードをコンパイルした Docker イメージ（埋め込みモデルを含む）
@@ -245,7 +250,7 @@ docker build --build-arg LIGHTEN=1 -f Dockerfile -t infiniflow/ragflow:nightly-s
 ```bash
 git clone https://github.com/infiniflow/ragflow.git
 cd ragflow/
-docker build -f Dockerfile -t infiniflow/ragflow:nightly .
+docker build --platform linux/amd64 -f Dockerfile -t infiniflow/ragflow:nightly .
 ```
 
 ## 🔨 ソースコードからサービスを起動する方法
@@ -253,7 +258,7 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
 1. uv をインストールする。すでにインストールされている場合は、このステップをスキップしてください:
 
    ```bash
-   pipx install uv
+   pipx install uv pre-commit
    ```
 
 2. ソースコードをクローンし、Python の依存関係をインストールする:
@@ -262,6 +267,8 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
    git clone https://github.com/infiniflow/ragflow.git
    cd ragflow/
    uv sync --python 3.10 --all-extras # install RAGFlow dependent python modules
+   uv run download_deps.py
+   pre-commit install
    ```
 
 3. Docker Compose を使用して依存サービス（MinIO、Elasticsearch、Redis、MySQL）を起動する:
@@ -282,7 +289,16 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
    export HF_ENDPOINT=https://hf-mirror.com
    ```
 
-5. バックエンドサービスを起動する:
+5. オペレーティングシステムにjemallocがない場合は、次のようにインストールします:
+   
+   ```bash
+   # ubuntu
+   sudo apt-get install libjemalloc-dev
+   # centos
+   sudo yum install jemalloc
+   ```
+
+6. バックエンドサービスを起動する:
 
    ```bash
    source .venv/bin/activate
@@ -290,12 +306,14 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
    bash docker/launch_backend_service.sh
    ```
 
-6. フロントエンドの依存関係をインストールする:
+7. フロントエンドの依存関係をインストールする:
+
    ```bash
    cd web
    npm install
    ```
-7. フロントエンドサービスを起動する:
+
+8. フロントエンドサービスを起動する:
 
    ```bash
    npm run dev
@@ -305,12 +323,22 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
 
    ![](https://github.com/user-attachments/assets/0daf462c-a24d-4496-a66f-92533534e187)
 
+9. 開発が完了したら、RAGFlow のフロントエンド サービスとバックエンド サービスを停止します:
+
+   ```bash
+   pkill -f "ragflow_server.py|task_executor.py"
+   ```
+
+
 ## 📚 ドキュメンテーション
 
 - [Quickstart](https://ragflow.io/docs/dev/)
-- [User guide](https://ragflow.io/docs/dev/category/guides)
+- [Configuration](https://ragflow.io/docs/dev/configurations)
+- [Release notes](https://ragflow.io/docs/dev/release_notes)
+- [User guides](https://ragflow.io/docs/dev/category/guides)
+- [Developer guides](https://ragflow.io/docs/dev/category/developers)
 - [References](https://ragflow.io/docs/dev/category/references)
-- [FAQ](https://ragflow.io/docs/dev/faq)
+- [FAQs](https://ragflow.io/docs/dev/faq)
 
 ## 📜 ロードマップ
 
@@ -318,7 +346,7 @@ docker build -f Dockerfile -t infiniflow/ragflow:nightly .
 
 ## 🏄 コミュニティ
 
-- [Discord](https://discord.gg/4XxujFgUN7)
+- [Discord](https://discord.gg/NjYzJD3GM3)
 - [Twitter](https://twitter.com/infiniflowai)
 - [GitHub Discussions](https://github.com/orgs/infiniflow/discussions)
 

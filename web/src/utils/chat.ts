@@ -1,4 +1,7 @@
-import { EmptyConversationId } from '@/constants/chat';
+import {
+  ChatVariableEnabledField,
+  EmptyConversationId,
+} from '@/constants/chat';
 import { Message } from '@/interfaces/database/chat';
 import { IMessage } from '@/pages/chat/interface';
 import { omit } from 'lodash';
@@ -56,4 +59,16 @@ export function replaceThinkToSection(text: string = '') {
   const result = text.replace(pattern, '<section class="think">$1</section>');
 
   return result;
+}
+
+export function setInitialChatVariableEnabledFieldValue(
+  field: ChatVariableEnabledField,
+) {
+  return field !== ChatVariableEnabledField.MaxTokensEnabled;
+}
+
+const ShowImageFields = ['image', 'table'];
+
+export function showImage(filed?: string) {
+  return ShowImageFields.some((x) => x === filed);
 }
